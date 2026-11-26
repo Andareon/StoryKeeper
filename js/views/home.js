@@ -60,7 +60,7 @@ export async function renderHome(app, { navigate }) {
       }
       const counts = game.counts || {}
       return `
-        <article class="game-card">
+        <article class="game-card" data-id="${esc(game.id)}" tabindex="0">
           <div class="game-cover">${cover || `<div class="cover-fallback">${esc((game.name || 'И').slice(0, 1))}</div>`}</div>
           <div class="game-body">
             <div class="row-between">
@@ -75,7 +75,6 @@ export async function renderHome(app, { navigate }) {
               <span>${esc(gameStamp(game, games))}</span>
             </p>
             <div class="game-actions">
-              <button type="button" class="btn btn-small" data-act="open" data-id="${esc(game.id)}">Открыть</button>
               <button type="button" class="text-btn" data-act="edit" data-id="${esc(game.id)}">Править</button>
               <button type="button" class="text-btn" data-act="copy" data-id="${esc(game.id)}">Копия</button>
               <button type="button" class="text-btn" data-act="export" data-id="${esc(game.id)}">Экспорт</button>
@@ -84,8 +83,24 @@ export async function renderHome(app, { navigate }) {
           </div>
         </article>`
     }).join('')
+    list.querySelectorAll('.game-card').forEach((card) => {
+      const open = () => act('open', card.dataset.id)
+      card.onclick = (event) => {
+        if (event.target.closest('button')) return
+        open()
+      }
+      card.onkeydown = (event) => {
+        if (event.target !== card) return
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
+        open()
+      }
+    })
     list.querySelectorAll('[data-act]').forEach((button) => {
-      button.onclick = () => act(button.dataset.act, button.dataset.id)
+      button.onclick = (event) => {
+        event.stopPropagation()
+        act(button.dataset.act, button.dataset.id)
+      }
     })
   }
   async function act(type, id) {
