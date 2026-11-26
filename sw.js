@@ -28,6 +28,7 @@ const ASSETS = [
   './js/ui/tags.js',
   './js/ui/gallery.js',
   './js/ui/master.js',
+  './js/ui/reorder.js',
   './js/ui/search-box.js',
   './js/ui/bits.js',
   './js/ui/relation-list.js',

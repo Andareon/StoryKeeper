@@ -1,9 +1,7 @@
 import {
   attitudeOf,
-  byName,
   byOrder,
   PLAYER_ATTITUDES,
-  byUpdatedDesc,
   CLUE_STATUSES,
   CLUE_TYPES,
   closenessWord,
@@ -76,7 +74,7 @@ export function mountSession(host, ctx) {
     const options = [
       ['session', 'В текущую сессию'],
       ['note', 'Новой заметкой'],
-      ...cache.players.map((player) => [`player:${player.id}`, `Игроку: ${playerTitle(player)}`]),
+      ...byOrder(cache.players, 'characterName').map((player) => [`player:${player.id}`, `Игроку: ${playerTitle(player)}`]),
     ]
     select.innerHTML = options.map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join('')
     if ([...select.options].some((option) => option.value === current)) select.value = current
@@ -87,8 +85,8 @@ export function mountSession(host, ctx) {
       railGroup('Локации', 'locations', byOrder(cache.locations), (item) => item.name || 'Без названия', 'Нет локаций'),
       railGroup('Персонажи', 'people', byOrder(cache.characters), (item) => item.name || 'Без имени', 'Нет персонажей', attitudeMark),
       railGroup('Улики и предметы', 'clues', byOrder(cache.clues), (item) => item.name || 'Без названия', 'Нет улик', clueMark),
-      railGroup('Игроки', 'players', byName(cache.players, 'characterName'), (item) => playerTitle(item), 'Нет игроков'),
-      railGroup('Заметки', 'notes', byUpdatedDesc(cache.notes), (item) => item.title || 'Без названия', 'Нет заметок'),
+      railGroup('Игроки', 'players', byOrder(cache.players, 'characterName'), (item) => playerTitle(item), 'Нет игроков'),
+      railGroup('Заметки', 'notes', byOrder(cache.notes, 'title'), (item) => item.title || 'Без названия', 'Нет заметок'),
     ].join('')
     rail.querySelectorAll('.rail-btn').forEach((button) => {
       button.onclick = () => open(button.dataset.kind, button.dataset.id)

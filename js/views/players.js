@@ -1,7 +1,7 @@
-import { byName, normalizePlayer, playerTitle } from '../domain.js'
+import { appendOrder, byOrder, normalizePlayer, playerTitle } from '../domain.js'
 import { campaignHash } from '../router.js'
 import { createSaver } from '../services/autosave.js'
-import { savePlain } from '../services/persist.js'
+import { saveOrder, savePlain } from '../services/persist.js'
 import { confirmDelete } from '../ui/bits.js'
 import { mountGallery } from '../ui/gallery.js'
 import {
@@ -27,12 +27,17 @@ export function mountPlayers(host, ctx) {
     createLabel: 'Новый',
     emptyText: 'Игроков пока нет.',
     initialId: ctx.route.entityId,
-    getItems: () => byName(ctx.db.cache.players, 'characterName'),
+    getItems: () => byOrder(ctx.db.cache.players, 'characterName'),
     itemTitle: (item) => playerTitle(item),
     itemMeta: (item) => item.playerName || item.classRole || '',
     hashFor: (id) => campaignHash(ctx.id, 'players', id),
     replaceHash: (hash) => ctx.replaceHash(hash),
-    onCreate: () => savePlain(ctx.db, 'players', normalizePlayer({ playerName: 'Игрок', characterName: 'Новый персонаж' })),
+    onReorder: (ordered) => keepOrder(ctx, 'players', ordered),
+    onCreate: () => savePlain(ctx.db, 'players', normalizePlayer({
+      playerName: 'Игрок',
+      characterName: 'Новый персонаж',
+      ...appendOrder(ctx.db.cache.players),
+    })),
     renderDetail: (detail, item, api) => renderPlayer(detail, item, api, ctx),
   })
 }
@@ -154,5 +159,16 @@ async function renderPlayer(host, item, api, ctx) {
     gallery.destroy()
     await relations.dispose()
     await saver.dispose()
+  }
+}
+
+async function keepOrder(ctx, store, ordered) {
+  ctx.setStatus('saving')
+  try {
+    await saveOrder(ctx.db, store, ordered)
+    ctx.setStatus('saved')
+  } catch (error) {
+    ctx.setStatus('error', error)
+    throw error
   }
 }

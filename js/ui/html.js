@@ -86,14 +86,16 @@ export function readControls(root, names) {
 export function picker(name, items, selectedIds) {
   if (!items.length) return '<p class="hint">Пока нечего связать. Сначала создайте карточки в соседнем разделе.</p>'
   const selected = new Set(selectedIds || [])
-  return `<div class="picker" data-picker="${esc(name)}">${items.map((item) => `
+  return `<div class="picker" data-picker="${esc(name)}">${items.map((item) => {
+    const label = item.href
+      ? `<button type="button" class="picker-link" data-goto="${esc(item.href)}">${esc(item.label)}</button>`
+      : `<span class="picker-label">${esc(item.label)}</span>`
+    return `
     <div class="picker-row">
-      <label class="check">
-        <input type="checkbox" value="${esc(item.id)}" data-save="now"${selected.has(item.id) ? ' checked' : ''}>
-        <span>${esc(item.label)}</span>
-      </label>
-      ${item.href ? `<button type="button" class="text-btn" data-goto="${esc(item.href)}">Открыть</button>` : ''}
-    </div>`).join('')}</div>`
+      <input type="checkbox" value="${esc(item.id)}" data-save="now"${selected.has(item.id) ? ' checked' : ''} aria-label="${esc(item.label)}">
+      ${label}
+    </div>`
+  }).join('')}</div>`
 }
 
 export function readPicker(root, name) {

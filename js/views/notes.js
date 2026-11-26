@@ -1,7 +1,7 @@
-import { byName, byUpdatedDesc, normalizeNote } from '../domain.js'
+import { appendOrder, byName, byOrder, normalizeNote } from '../domain.js'
 import { campaignHash } from '../router.js'
 import { createSaver } from '../services/autosave.js'
-import { savePlain } from '../services/persist.js'
+import { saveOrder, savePlain } from '../services/persist.js'
 import { confirmDelete } from '../ui/bits.js'
 import {
   bindSaver,
@@ -24,18 +24,22 @@ export function mountNotes(host, ctx) {
     createLabel: 'Заметка',
     emptyText: 'Заметок пока нет.',
     initialId: ctx.route.entityId,
-    getItems: () => byUpdatedDesc(ctx.db.cache.notes),
+    getItems: () => byOrder(ctx.db.cache.notes, 'title'),
     itemTitle: (item) => item.title,
     itemMeta: (item) => formatWhen(item.updatedAt || item.createdAt),
     hashFor: (id) => campaignHash(ctx.id, 'notes', id),
     replaceHash: (hash) => ctx.replaceHash(hash),
-    onCreate: () => savePlain(ctx.db, 'notes', normalizeNote({ title: 'Новая заметка' })),
+    onReorder: (ordered) => keepOrder(ctx, 'notes', ordered),
+    onCreate: () => savePlain(ctx.db, 'notes', normalizeNote({
+      title: 'Новая заметка',
+      ...appendOrder(ctx.db.cache.notes),
+    })),
     renderDetail: (detail, item, api) => renderNote(detail, item, api, ctx),
   })
 }
 
 function renderNote(host, item, api, ctx) {
-  const locations = byName(ctx.db.cache.locations).map((location) => ({
+  const locations = byOrder(ctx.db.cache.locations).map((location) => ({
     id: location.id,
     label: location.name || 'Локация',
     href: campaignHash(ctx.id, 'locations', location.id),
@@ -92,4 +96,15 @@ function renderNote(host, item, api, ctx) {
     id: item.id,
   })
   return () => saver.dispose()
+}
+
+async function keepOrder(ctx, store, ordered) {
+  ctx.setStatus('saving')
+  try {
+    await saveOrder(ctx.db, store, ordered)
+    ctx.setStatus('saved')
+  } catch (error) {
+    ctx.setStatus('error', error)
+    throw error
+  }
 }
