@@ -1,0 +1,2 @@
+/* Базовые правила собраны в tokens.css, чтобы не дублировать сброс. */
+body { text-rendering: optimizeLegibility; }

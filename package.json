@@ -1,0 +1,15 @@
+{
+  "name": "storykeeper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/"
+  },
+  "devDependencies": {
+    "cytoscape": "^3.30.4",
+    "fake-indexeddb": "^6.2.8",
+    "jszip": "^3.10.1",
+    "lucide": "^0.544.0"
+  }
+}
